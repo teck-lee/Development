@@ -243,9 +243,7 @@ namespace MiniProgram.Repository
         {
             var result = new ResponseBase();
             StringBuilder sb = new StringBuilder();
-
             
-
             using (var connection = new SqlConnection(connectionstring))
             {
                 connection.Open();
@@ -323,6 +321,94 @@ namespace MiniProgram.Repository
                         }
                     }
                 }
+
+                connection.Close();
+            }
+
+            return result;
+        }
+
+        internal async Task<ResponseBase> GenerateInvoice(Invoice request)
+        {
+            var result = new ResponseBase();
+            StringBuilder sb = new StringBuilder();
+
+            using (var connection = new SqlConnection(connectionstring))
+            {
+                connection.Open();
+               
+                    int invoiceId = 0;
+
+                    using (SqlTransaction transaction = connection.BeginTransaction())
+                    {
+                        //    SqlTransaction transaction;
+                        //transaction = connection.BeginTransaction("CreateInvoice");
+
+                        try
+                        {
+                            sb.Clear();
+
+                            sb.Append(@" INSERT INTO dbo.Invoice (InvoiceNo, InvoiceDate, CustomerId, CreatedDatetime)
+                         VALUES (@invoiceNo, @invDate, @customerId, GetDate()) ;
+                         SELECT CAST(SCOPE_IDENTITY() AS int)");
+
+                            object param = new
+                            {
+                                invoiceNo = request.InvoiceNo,
+                                invDate = request.InvoiceDate,
+                                customerId = request.CustomerId
+                            };
+
+                            invoiceId = (int)await connection.ExecuteScalarAsync(sb.ToString(), param, transaction);
+
+                            foreach (InvoiceDetail id in request.Data)
+                            {
+                            //  id.InvoiceId = invoiceId;
+                                    sb.Clear();
+
+                                    sb.Append(@" INSERT INTO dbo.InvoiceDetail (InvoiceId, ProductId, Quantity, UnitPrice)
+                                        VALUES (@invId, @productId, @qty, @unitPrice);");
+
+                                    object param1 = new
+                                    {
+                                        invId = invoiceId,
+                                        productId = id.ProductId,
+                                        qty = id.Quantity,
+                                        unitPrice = id.UnitPrice
+                                    };
+
+                                 await connection.ExecuteScalarAsync(sb.ToString(), param1, transaction);
+                            }
+
+                            //using (var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, transaction))
+                            //{
+                            //    bulkCopy.BatchSize = 100;
+                            //    bulkCopy.DestinationTableName = "dbo.InvoiceDetail";
+                            //    try
+                            //    {
+                            //        var dt = request.Data.AsDataTable();
+
+                            //        MapColumns(dt, bulkCopy);
+
+
+                            //        bulkCopy.WriteToServer(request.Data.AsDataTable());
+                            //    }
+                            //    catch (Exception ex)
+                            //    {
+                            //        transaction.Rollback();
+                            //        connection.Close();
+                            //    }
+                            //}
+
+                            transaction.Commit();
+                        }
+                        catch (Exception)
+                        {
+                            transaction.Rollback();
+                            result.Message = "Error inserting record";
+                        }
+                    }
+              
 
                 connection.Close();
             }
@@ -508,8 +594,11 @@ namespace MiniProgram.Repository
             {
                 var invoices = GenerateRandomInvoice(totalInvoice);
 
-                 await Task.Factory.StartNew(() => CreateInvoice(invoices));
-               
+                 Parallel.ForEach(invoices, new ParallelOptions() { MaxDegreeOfParallelism = 2 }, async invoice => await GenerateInvoice(invoice));
+              //  await Task.Factory.StartNew(() => Parallel.ForEach(invoices, new ParallelOptions() { MaxDegreeOfParallelism = 2 }, async inv => await GenerateInvoice(inv)));
+
+                //await Task.Factory.StartNew(() => CreateInvoice(invoices));
+
             }
             catch (Exception )
             {
