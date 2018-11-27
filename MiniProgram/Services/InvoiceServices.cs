@@ -36,7 +36,7 @@ namespace MiniProgram.Services
             return await _invRepository.GetInvoices();
         }
 
-        public async Task<ResponseBase> CreateInvoice(CreateInvoiceRequest request)
+        public async Task<ResponseBase> CreateInvoice(Invoice request)
         {
             var response = new ResponseBase();
             //validate invoice no

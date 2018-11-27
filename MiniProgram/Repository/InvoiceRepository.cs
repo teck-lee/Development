@@ -113,7 +113,7 @@ namespace MiniProgram.Repository
                     output = invList.FirstOrDefault();
                 }
             }
-            catch (Exception ex)
+            catch (Exception )
             {
             }
             return output;
@@ -175,13 +175,13 @@ namespace MiniProgram.Repository
                     output = invList.Distinct().ToList();
                 }
             }
-            catch (Exception ex)
+            catch (Exception )
             {
             }
             return output;
         }
 
-        internal async Task<ResponseBase> CreateInvoice(CreateInvoiceRequest request)
+        internal async Task<ResponseBase> CreateInvoice(Invoice request)
         {
             var result = new ResponseBase();
             StringBuilder sb = new StringBuilder();
@@ -209,7 +209,7 @@ namespace MiniProgram.Repository
 
                     invoiceId = (int)await connection.ExecuteScalarAsync(sb.ToString(), param, transaction);
 
-                    foreach (InvoiceDetailRequest id in request.Data)
+                    foreach (InvoiceDetail id in request.Data)
                     {
                         sb.Clear();
 
@@ -229,7 +229,7 @@ namespace MiniProgram.Repository
 
                     transaction.Commit();
                 }
-                catch (Exception ex)
+                catch (Exception )
                 {
                     transaction.Rollback();
                     result.Message = "Error inserting record";
@@ -239,7 +239,7 @@ namespace MiniProgram.Repository
             return result;
         }
 
-        internal async Task<ResponseBase> CreateInvoice(List<CreateInvoiceRequest> requestList)
+        internal async Task<ResponseBase> CreateInvoice(List<Invoice> requestList)
         {
             var result = new ResponseBase();
             StringBuilder sb = new StringBuilder();
@@ -249,7 +249,7 @@ namespace MiniProgram.Repository
             using (var connection = new SqlConnection(connectionstring))
             {
                 connection.Open();
-                foreach (CreateInvoiceRequest request in requestList)
+                foreach (Invoice request in requestList)
                 {
                     int invoiceId = 0;
 
@@ -275,7 +275,7 @@ namespace MiniProgram.Repository
 
                             invoiceId = (int)await connection.ExecuteScalarAsync(sb.ToString(), param, transaction);
                                                         
-                            foreach (InvoiceDetailRequest id in request.Data)
+                            foreach (InvoiceDetail id in request.Data)
                             {
                                 id.InvoiceId = invoiceId;
                              //   sb.Clear();
@@ -305,9 +305,9 @@ namespace MiniProgram.Repository
                                     MapColumns(dt, bulkCopy);
                                     
 
-                                    bulkCopy.WriteToServer(request.Data.Where(r=> r.InvoiceId == invoiceId).AsDataTable());
+                                    bulkCopy.WriteToServer(request.Data.AsDataTable());
                                 }
-                                catch (Exception)
+                                catch (Exception ex)
                                 {
                                     transaction.Rollback();
                                     connection.Close();
@@ -316,7 +316,7 @@ namespace MiniProgram.Repository
 
                             transaction.Commit();
                         }
-                        catch (Exception ex)
+                        catch (Exception )
                         {
                             transaction.Rollback();
                             result.Message = "Error inserting record";
@@ -378,7 +378,7 @@ namespace MiniProgram.Repository
 
                     transaction.Commit();
                 }
-                catch (Exception ex)
+                catch (Exception )
                 {
                     transaction.Rollback();
                     result.Message = "Error inserting record";
@@ -439,7 +439,7 @@ namespace MiniProgram.Repository
 
                     transaction.Commit();
                 }
-                catch (Exception ex)
+                catch (Exception )
                 {
                     transaction.Rollback();
                     result.Message = "Error Updating record";
@@ -467,7 +467,7 @@ namespace MiniProgram.Repository
 
                     result = await connection.ExecuteScalarAsync<bool>(sb.ToString(), param);
                 }
-                catch (Exception ex)
+                catch (Exception )
                 {
                 }
                 return result;
@@ -493,7 +493,7 @@ namespace MiniProgram.Repository
 
                     result = await connection.ExecuteScalarAsync<bool>(sb.ToString(), param);
                 }
-                catch (Exception ex)
+                catch (Exception )
                 {
                 }
                 return result;
@@ -511,7 +511,7 @@ namespace MiniProgram.Repository
                  await Task.Factory.StartNew(() => CreateInvoice(invoices));
                
             }
-            catch (Exception ex)
+            catch (Exception )
             {
             }
 
@@ -520,13 +520,13 @@ namespace MiniProgram.Repository
 
         #region Auto Generate Test Invoice
 
-        private List<CreateInvoiceRequest> GenerateRandomInvoice(int totalInvoice)
+        private List<Invoice> GenerateRandomInvoice(int totalInvoice)
         {
-            var output = new List<CreateInvoiceRequest>();
+            var output = new List<Invoice>();
             var generator = new RandomGenerator();
             try
             {
-                var invoices = Builder<CreateInvoiceRequest>.CreateListOfSize(totalInvoice)
+                var invoices = Builder<Invoice>.CreateListOfSize(totalInvoice)
                 .All()
                 .With(o => o.InvoiceNo = "Inv" + generator.Next(1, 10000000))
                 .With(o => o.CustomerId = generator.Next(1, 3))
@@ -536,7 +536,7 @@ namespace MiniProgram.Repository
                 invoices.ToList().ForEach
                 (i =>
                 {
-                    var invoiceItems = Builder<InvoiceDetailRequest>.CreateListOfSize(generator.Next(1, 5))
+                    var invoiceItems = Builder<InvoiceDetail>.CreateListOfSize(generator.Next(1, 5))
                           .All()
                           .With(ii => ii.ProductId = generator.Next(1, 10))
                           .With(ii => ii.Quantity = generator.Next(1, 10))
@@ -546,9 +546,9 @@ namespace MiniProgram.Repository
                     i.Data = invoiceItems;
                 });
 
-                output = (List<CreateInvoiceRequest>)invoices;
+                output = (List<Invoice>)invoices;
             }
-            catch (Exception ex)
+            catch (Exception )
             {
             }
 

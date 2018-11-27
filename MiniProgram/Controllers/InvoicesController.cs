@@ -1,7 +1,9 @@
+using Mapster;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using MiniProgram.Dto;
+using MiniProgram.Model;
 using MiniProgram.Services;
 using System.Threading.Tasks;
 
@@ -27,21 +29,21 @@ namespace MiniProgram.Controllers
            return "Success";
         }
 
-        [HttpGet("DebugConnection")]
-        public async Task<IActionResult> DebugConnection()
-        {
+        //[HttpGet("DebugConnection")]
+        //public async Task<IActionResult> DebugConnection()
+        //{
 
-            var obj = await _invoiceService.DebugConnection();
+        //    var obj = await _invoiceService.DebugConnection();
 
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(obj);
-            }
-            else
-            {
-                return Ok(obj);
-            }
-        }
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(obj);
+        //    }
+        //    else
+        //    {
+        //        return Ok(obj);
+        //    }
+        //}
 
 
         [HttpGet("GetInvoiceByInvoiceNo")]
@@ -86,7 +88,9 @@ namespace MiniProgram.Controllers
                 return BadRequest("Request object cannot be empty.");
             }
 
-            var result = await _invoiceService.CreateInvoice(request);
+           var requestObj =  TypeAdapter.Adapt<CreateInvoiceRequest, Invoice>(request);
+
+            var result = await _invoiceService.CreateInvoice(requestObj);
 
             if (!ModelState.IsValid || !string.IsNullOrEmpty(result.Message))
             {

@@ -1,4 +1,7 @@
-﻿namespace MiniProgram.Model
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace MiniProgram.Model
 {
     public class InvoiceDetail
     {
@@ -8,9 +11,14 @@
         public decimal UnitPrice { get; set; }
         public int Quantity { get; set; }
 
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed), Category("NoMap")]
         public string ProductCode { get; set; }
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed), Category("NoMap")]
         public string ProductName { get; set; }
-        
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed), Category("NoMap")]
         public decimal SubTotal { get; set; }
     }
 }

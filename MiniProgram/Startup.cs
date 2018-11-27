@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MiniProgram.Services;
+using Swashbuckle.AspNetCore.Swagger;
 
 namespace MiniProgram
 {
@@ -27,9 +28,12 @@ namespace MiniProgram
             services.AddAWSService<Amazon.S3.IAmazonS3>();
             //services.AddSingleton<IConfiguration>(Configuration.GetSection("ConnectionStrings:ConnectionString"));
             services.AddSingleton<InvoiceServices>();
-         
 
-            //services.Configure<InvoiceServices>(Configuration);
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Info { Title = "Invoice API", Version = "v1" });
+                c.OperationFilter<AwsApiGatewayIntegrationFilter>();
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline
@@ -43,6 +47,15 @@ namespace MiniProgram
             {
                 app.UseHsts();
             }
+
+            app.UseSwagger();
+
+            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
+            // specifying the Swagger JSON endpoint.
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/Prod/swagger/v1/swagger.json", "Invoice API V1");
+            });
 
             app.UseHttpsRedirection();
             app.UseMvc();
